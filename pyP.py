@@ -214,14 +214,14 @@ def aziequi(ax, staloc0, staloc1):
     theta=np.linspace(0, 360, 360)
     for i in [30, 60, 90]:
         x, y=(i*np.cos(theta*np.pi/180.0), i*np.sin(theta*np.pi/180.0))
-        ax.plot(x, y, color='k', zorder=0, solid_capstyle='round', lw=0.5, linestyle='--')
+        ax.plot(x, y, color='k', zorder=0, solid_capstyle='round', lw=0.1)
         x, y=(i*np.cos(-90*np.pi/180.0), i*np.sin(-90*np.pi/180.0))
         text = ax.text(x, y, str(i)+'$\degree$', size=6, va='center', ha='center')
         text.set_path_effects([path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()])
     delrange = np.linspace(0, 100, 10)
     for i in np.arange(0, 360, 30):
         x, y=(delrange*np.cos(i*np.pi/180.0), delrange*np.sin(i*np.pi/180.0))
-        ax.plot(x, y, color='k', zorder=0, solid_capstyle='round', lw=0.5, linestyle='--')
+        ax.plot(x, y, color='k', zorder=0, solid_capstyle='round', lw=0.1)
 
     x, y=(100*np.cos(theta*np.pi/180.0), 100*np.sin(theta*np.pi/180.0))
     ax.plot(x, y, color='k', solid_capstyle='round', lw=1)
