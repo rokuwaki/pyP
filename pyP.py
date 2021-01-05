@@ -2,10 +2,7 @@
 pyP
 =======
 `pyP` is a Python GUI tool to pick arrival time of P-phase
-Basis usage: execute `pyP.py` where the SAC data is stored
->>> python pyP.py 10
 """
-
 class Index(object):
     '''
     Switch panel for the waveform traces by clcking the buttons
@@ -202,6 +199,44 @@ def keypress(event):
         ax.texts[0].set_y(ymax-(ymax-ymin)*0.1)
     fig.canvas.draw()
 
+def aziequi(ax, staloc0, staloc1):
+    #data = np.loadtxt(stalist, usecols=(5, 4))
+    #d, a = (data[:, 0], 90-data[:,1])
+    x, y = staloc0, staloc1
+    sc=ax.scatter(x, y, s=15, marker='^', edgecolor='none', facecolor='gray', alpha=0.85, zorder=10)
+    sc=ax.scatter(x, y, s=15, marker='^', edgecolor='k', facecolor='none', alpha=1, lw=0.5, zorder=10)
+    #stalist=np.loadtxt(stalist, usecols=(0), dtype=str)
+    #print(stalist)
+    #for (i, staname) in enumerate(stalist):
+        #text = ax.text(x[i], y[i], staname, size=10, va='center')
+        #text.set_path_effects([path_effects.Stroke(linewidth=1, foreground='w', alpha=0.85), path_effects.Normal()])
+    #ax.scatter(0, 0, s=100, marker='*', edgecolor='k', facecolor='none')
+    theta=np.linspace(0, 360, 360)
+    for i in [30, 60, 90]:
+        x, y=(i*np.cos(theta*np.pi/180.0), i*np.sin(theta*np.pi/180.0))
+        ax.plot(x, y, color='k', zorder=0, solid_capstyle='round', lw=0.5, linestyle='--')
+        x, y=(i*np.cos(-90*np.pi/180.0), i*np.sin(-90*np.pi/180.0))
+        text = ax.text(x, y, str(i)+'$\degree$', size=6, va='center', ha='center')
+        text.set_path_effects([path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()])
+    delrange = np.linspace(0, 100, 10)
+    for i in np.arange(0, 360, 30):
+        x, y=(delrange*np.cos(i*np.pi/180.0), delrange*np.sin(i*np.pi/180.0))
+        ax.plot(x, y, color='k', zorder=0, solid_capstyle='round', lw=0.5, linestyle='--')
+
+    x, y=(100*np.cos(theta*np.pi/180.0), 100*np.sin(theta*np.pi/180.0))
+    ax.plot(x, y, color='k', solid_capstyle='round', lw=1)
+    ax.fill(x, y, edgecolor='none', facecolor='w', zorder=0)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.set_xticks([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_yticks([])
+    return sc
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, MultiCursor
@@ -218,6 +253,8 @@ from cycler import cycler
 cmap = plt.get_cmap('Set3', 12)
 custom_color_cycle = [ str(mpl.colors.rgb2hex(cmap(i)[:3])) for i in range(cmap.N) ]
 plt.rc('axes', prop_cycle=(cycler(color=custom_color_cycle)))
+from geographiclib.geodesic import Geodesic
+geod = Geodesic.WGS84
 
 textpe = [path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()]
 xmin0 = -100
@@ -226,6 +263,8 @@ xmax0 = 400
 parser = argparse.ArgumentParser(description='pyP: Python based P-arrival picking tool')
 parser.add_argument('arg1', help='Number of traces shown in display (e.g., 7)')
 parser.add_argument('arg2', help='SAC files you want to pick P arrival (e.g., "./*.SAC") *Do not forget quotation marks!')
+parser.add_argument('arg3', help='Latitude of epicentre')
+parser.add_argument('arg4', help='Longitude of epicentre')
 args = parser.parse_args()
 try:
     worknumtrace = int(args.arg1)
@@ -245,18 +284,34 @@ if len(glob.glob(sacfiles)) == 0:
     print('')
     sys.exit(1)
 
-
 st = read(sacfiles)
+elat, elon = float(args.arg3), float(args.arg4) #38.392, 39.085
+for j in range(len(st)):
+    trace = st[j].copy()
+    tmp = geod.Inverse(elat, elon, trace.stats.sac.stla, trace.stats.sac.stlo)
+    azi = tmp['azi1']
+    if azi < 0:
+        azi = 360 + azi
+    trace.stats.sac.user0 = azi
+    trace.stats.sac.user1 = tmp['a12']
+    st[j] = trace
+st.traces.sort(key=lambda x: x.stats.sac.user0)
+
 totalnumtrace = len(glob.glob(sacfiles))
 #worknumtrace = 8
 amarkerlist = np.zeros(totalnumtrace)
 
-fig, axs = plt.subplots(totalnumtrace)
+fig, axs = plt.subplots(totalnumtrace, figsize=(15, 10))
+fig.subplots_adjust(left=0.3)
 
+azilist = []
+dellist = []
 for j,ax in enumerate(axs.flat):
     trace = st[j].copy()
     amarker = trace.stats.sac.a
     amarkerlist[j] =  amarker
+    azilist.append(trace.stats.sac.user0)
+    dellist.append(trace.stats.sac.user1)
     df = trace.stats.sampling_rate
     x = np.arange(0, trace.stats.npts, 1) / df - amarker
     y = trace.data - np.mean(trace.data[ int((amarker+xmin0)*df):int((amarker)*df) ])
@@ -268,8 +323,9 @@ for j,ax in enumerate(axs.flat):
     ymax0 = max( np.abs(y[ int((amarker+xmin0)*df):int((amarker+xmax0)*df) ]) ) * 1.2
     ax.set_ylim(ymin0, ymax0)
     textlabel = str(j+1)+'/'+str(totalnumtrace)+'\n'+str(trace.stats.network)+'.'+str(trace.stats.station)+'.'+str(trace.stats.location)+'.'+str(trace.stats.channel)
+    textlabel1 = '\nAzi: '+str('{:.2f}'.format(trace.stats.sac.user0)) + '\nDel: ' + str('{:.2f}'.format(trace.stats.sac.user1))
     #axp = ax.get_position()
-    text = ax.text(xmin0+(xmax0-xmin0)*0.005, ymax0-(ymax0-ymin0)*0.1, textlabel, fontsize=8, ha='left', va='top').set_path_effects(textpe)
+    text = ax.text(xmin0+(xmax0-xmin0)*0.005, ymax0-(ymax0-ymin0)*0.1, textlabel+textlabel1, fontsize=8, ha='left', va='top').set_path_effects(textpe)
 
     ax.patch.set_facecolor('C'+str(j))
     ax.patch.set_alpha(0.2)
@@ -323,9 +379,18 @@ for j in np.arange(0, worknumtrace, 1):
 
 axp = axs[-1].get_position()
 axbutton = fig.add_axes([axp.x1-0.1, axp.y0-0.05, 0.1, 0.035])
+axstamap = fig.add_axes([axp.x0-0.255, axp.y0, 0.25, 0.25])
+axstamap.set_aspect(1)
 
 axp = axbutton.get_position()
 fig.text(axp.x0-0.01, axp.y0+axp.height/2, '', ha='right', va='center')
 bsave = Button(axbutton, 'Save')
+
+#axp=ax.get_position()
+d, a = np.array(dellist), 90-np.array(azilist)
+staloc0, staloc1=(d*np.cos(a*np.pi/180.0), d*np.sin(a*np.pi/180.0))
+sc = aziequi(axstamap, staloc0, staloc1)
+
+
 
 plt.show()
