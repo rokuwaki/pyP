@@ -1,4 +1,15 @@
+"""
+pyP
+=======
+`pyP` is a Python GUI tool to pick arrival time of P-phase
+Basis usage: execute `pyP.py` where the SAC data is stored
+>>> python pyP.py 10
+"""
+
 class Index(object):
+    '''
+    Switch panel for the waveform traces by clcking the buttons
+    '''
     ind = 0
     def next(self, event):
         self.ind += 1
@@ -133,6 +144,10 @@ class Index(object):
             fig.canvas.draw()
 
 def oncpick(event):
+    '''
+    Left click: Pick arrival time
+    Click "Save" button: Keep picked time as `amarker` and save to csv file
+    '''
     if event.inaxes and event.inaxes in axs:
         if event.button == 1: # Left click only
             ax = event.inaxes
@@ -166,20 +181,8 @@ def keypress(event):
         ymax = ax.get_ylim()[1]
         if event.key == '.':
             ax.set_ylim(ymin*0.8, ymax*0.8)
-            xmin = ax.get_xlim()[0]
-            xmax = ax.get_xlim()[1]
-            ymin = ax.get_ylim()[0]
-            ymax = ax.get_ylim()[1]
-            ax.texts[0].set_x(xmin+(xmax-xmin)*0.005)
-            ax.texts[0].set_y(ymax-(ymax-ymin)*0.1)
         if event.key == ',':
             ax.set_ylim(ymin*1.2, ymax*1.2)
-            xmin = ax.get_xlim()[0]
-            xmax = ax.get_xlim()[1]
-            ymin = ax.get_ylim()[0]
-            ymax = ax.get_ylim()[1]
-            ax.texts[0].set_x(xmin+(xmax-xmin)*0.005)
-            ax.texts[0].set_y(ymax-(ymax-ymin)*0.1)
         if event.key == 'a':
             xmin = xmin * 0.8
             xmax = xmax * 0.8
@@ -187,30 +190,16 @@ def keypress(event):
                 exit
             else:
                 ax.set_xlim(xmin, xmax)
-                xmin = ax.get_xlim()[0]
-                xmax = ax.get_xlim()[1]
-                ymin = ax.get_ylim()[0]
-                ymax = ax.get_ylim()[1]
-                ax.texts[0].set_x(xmin+(xmax-xmin)*0.005)
-                ax.texts[0].set_y(ymax-(ymax-ymin)*0.1)
         if event.key == 'z':
             ax.set_xlim(xmin*1.2, xmax*1.2)
-            xmin = ax.get_xlim()[0]
-            xmax = ax.get_xlim()[1]
-            ymin = ax.get_ylim()[0]
-            ymax = ax.get_ylim()[1]
-            ax.texts[0].set_x(xmin+(xmax-xmin)*0.005)
-            ax.texts[0].set_y(ymax-(ymax-ymin)*0.1)
         if event.key == 'x':
             ax.set_xlim(xmin0, xmax0)
-            xmin = ax.get_xlim()[0]
-            xmax = ax.get_xlim()[1]
-            ymin = ax.get_ylim()[0]
-            ymax = ax.get_ylim()[1]
-            ax.texts[0].set_x(xmin+(xmax-xmin)*0.005)
-            ax.texts[0].set_y(ymax-(ymax-ymin)*0.1)
-
-
+        xmin = ax.get_xlim()[0]
+        xmax = ax.get_xlim()[1]
+        ymin = ax.get_ylim()[0]
+        ymax = ax.get_ylim()[1]
+        ax.texts[0].set_x(xmin+(xmax-xmin)*0.005)
+        ax.texts[0].set_y(ymax-(ymax-ymin)*0.1)
     fig.canvas.draw()
 
 import numpy as np
@@ -218,6 +207,8 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, MultiCursor
 from matplotlib.gridspec import GridSpec
 import sys
+import glob
+import argparse
 from obspy import read
 import mplcursors
 import matplotlib.patheffects as path_effects
@@ -231,10 +222,33 @@ plt.rc('axes', prop_cycle=(cycler(color=custom_color_cycle)))
 textpe = [path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()]
 xmin0 = -100
 xmax0 = 400
-st = read('./SACfiles/*.SAC')
 
-totalnumtrace = 20
-worknumtrace = 8
+parser = argparse.ArgumentParser(description='pyP: Python based P-arrival picking tool')
+parser.add_argument('arg1', help='Number of traces shown in display (e.g., 7)')
+parser.add_argument('arg2', help='SAC files you want to pick P arrival (e.g., "./*.SAC") *Do not forget quotation marks!')
+args = parser.parse_args()
+try:
+    worknumtrace = int(args.arg1)
+except ValueError:
+    worknumtrace = 7
+    sacfiles = args.arg1
+    print('')
+    print('  Caution: You did not input the number of traces shown at once.')
+    print('           --> I set 7 as the number of traces on display at once: `worknumtrace`.')
+    print('  Next time, input the number of traces you like as:')
+    print('  > python pyP.py 7 "./*.SAC"')
+    print('')
+sacfiles = args.arg2
+if len(glob.glob(sacfiles)) == 0:
+    print('')
+    print('  Error: No SAC files identified. Pleae specify the correct SAC files. Stopped.')
+    print('')
+    sys.exit(1)
+
+
+st = read(sacfiles)
+totalnumtrace = len(glob.glob(sacfiles))
+#worknumtrace = 8
 amarkerlist = np.zeros(totalnumtrace)
 
 fig, axs = plt.subplots(totalnumtrace)
@@ -271,12 +285,11 @@ callback = Index()
 axp = axs[-1].get_position()
 
 #axp.x1-axp.width*0.1, axp.y1+0.01, axp.width*0.1, axp.height*0.75
-print(axp)
 tmpw = axp.width*0.08
-axprevFurther = plt.axes([axp.x0, axp.y0-0.05, tmpw, axp.height])
-axprev = plt.axes([axp.x0+tmpw+0.02, axp.y0-0.05, tmpw, axp.height])
-axnext = plt.axes([axp.x0+tmpw*2+0.02*2, axp.y0-0.05, tmpw, axp.height])
-axnextFurther = plt.axes([axp.x0+tmpw*3+0.02*3, axp.y0-0.05, tmpw, axp.height])
+axprevFurther = plt.axes([axp.x0, axp.y0-0.05, tmpw, 0.035])
+axprev = plt.axes([axp.x0+tmpw+0.02, axp.y0-0.05, tmpw, 0.035])
+axnext = plt.axes([axp.x0+tmpw*2+0.02*2, axp.y0-0.05, tmpw, 0.035])
+axnextFurther = plt.axes([axp.x0+tmpw*3+0.02*3, axp.y0-0.05, tmpw, 0.035])
 
 bprevFurther = Button(axprevFurther, '<<')
 bprevFurther.on_clicked(callback.prevFurther)
@@ -309,7 +322,7 @@ for j in np.arange(0, worknumtrace, 1):
     axs[j].set_position(gs[j].get_position(fig))
 
 axp = axs[-1].get_position()
-axbutton = fig.add_axes([axp.x1-0.1, axp.y0-0.05, 0.1, axp.height])
+axbutton = fig.add_axes([axp.x1-0.1, axp.y0-0.05, 0.1, 0.035])
 
 axp = axbutton.get_position()
 fig.text(axp.x0-0.01, axp.y0+axp.height/2, '', ha='right', va='center')
