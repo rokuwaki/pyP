@@ -151,13 +151,17 @@ def oncpick(event):
             x = ax.lines[0].get_xdata()
             ax.lines[0].set_xdata(x-event.xdata)
             axind = fig.axes.index(ax)
-            amarkerlist[axind] = ax.get_xlim()[0]
+            tmpx = ax.lines[0].get_xdata()
+            amarkerlist[axind] = -tmpx[0] # arrival time relative to data starttime
     elif event.inaxes and event.inaxes == axbutton:
         if event.button == 1: # Left click only
             ax = event.inaxes
-            print(amarkerlist)
             tmp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             fig.texts[-1].set_text('Saved! '+tmp)
+
+            columns = ['amarker', 'Station']
+            df = pd.DataFrame(np.array([amarkerlist, stanamelist]).T, columns = columns)
+            df.to_csv('log.csv')
 
     fig.canvas.draw()
 
@@ -235,6 +239,7 @@ import glob
 import argparse
 import mplcursors
 import numpy as np
+import pandas as pd
 from obspy import read
 import matplotlib as mpl
 from cycler import cycler
@@ -297,11 +302,13 @@ fig, axs = plt.subplots(totalnumtrace, figsize=(15, 10))
 fig.subplots_adjust(left=0.3)
 
 amarkerlist = np.zeros(totalnumtrace)
+stanamelist = []
 azilist, dellist = [], []
 for j,ax in enumerate(axs.flat):
     trace = st[j].copy()
     amarker = trace.stats.sac.a
     amarkerlist[j] =  amarker
+    stanamelist.append(trace.stats.station)
     azilist.append(trace.stats.sac.user0)
     dellist.append(trace.stats.sac.user1)
     df = trace.stats.sampling_rate
@@ -377,7 +384,7 @@ axstamap = fig.add_axes([axp.x0-0.255, axp.y0, 0.25, 0.25])
 axstamap.set_aspect(1)
 sc = aziequi(axstamap, azilist, dellist)
 
-# Save function
+# Save function (save amarker list in log.csv)
 axbutton = fig.add_axes([axp.x1-0.1, axp.y0-0.05, 0.1, 0.035])
 axp = axbutton.get_position()
 fig.text(axp.x0-0.01, axp.y0+axp.height/2, '', ha='right', va='center')
