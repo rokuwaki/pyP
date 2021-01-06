@@ -8,70 +8,6 @@ class Index(object):
     Switch panel for the waveform traces by clcking the buttons
     '''
     ind = 0
-    def next(self, event):
-        self.ind += 1
-        if self.ind > totalnumtrace-1:
-            self.ind = 0
-        for ax in axs:
-            ax.set_visible(False)
-        axinit = self.ind
-        gsind = 0
-        for j in np.arange(axinit, axinit+worknumtrace, 1):
-            if j > totalnumtrace-1:
-                j = j - totalnumtrace
-            axs[j].set_visible(True)
-            axs[j].set_position(gs[gsind].get_position(fig))
-            gsind += 1
-        fig.canvas.draw()
-
-    def nextFurther(self, event):
-        self.ind += worknumtrace - 1
-        if self.ind > totalnumtrace-1:
-            self.ind = self.ind - totalnumtrace
-        for ax in axs:
-            ax.set_visible(False)
-        axinit = self.ind
-        gsind = 0
-        for j in np.arange(axinit, axinit+worknumtrace, 1):
-            if j > totalnumtrace-1:
-                j = j - totalnumtrace
-            axs[j].set_visible(True)
-            axs[j].set_position(gs[gsind].get_position(fig))
-            gsind += 1
-        fig.canvas.draw()
-
-    def prev(self, event):
-        self.ind -= 1
-        if self.ind < 0:
-            self.ind = totalnumtrace-1
-        for ax in axs:
-            ax.set_visible(False)
-        axinit = self.ind
-        gsind = 0
-        for j in np.arange(axinit, axinit+worknumtrace, 1):
-            if j > totalnumtrace-1:
-                j = j - totalnumtrace
-            axs[j].set_visible(True)
-            axs[j].set_position(gs[gsind].get_position(fig))
-            gsind += 1
-        fig.canvas.draw()
-
-    def prevFurther(self, event):
-        self.ind -= worknumtrace - 1
-        if self.ind < 0:
-            self.ind = self.ind + totalnumtrace
-        for ax in axs:
-            ax.set_visible(False)
-        axinit = self.ind
-        gsind = 0
-        for j in np.arange(axinit, axinit+worknumtrace, 1):
-            if j > totalnumtrace-1:
-                j = j - totalnumtrace
-            axs[j].set_visible(True)
-            axs[j].set_position(gs[gsind].get_position(fig))
-            gsind += 1
-        fig.canvas.draw()
-
     def nextKey(self, event):
         if event.key == 'down':
             self.ind += 1
@@ -79,6 +15,7 @@ class Index(object):
                 self.ind = 0
             for ax in axs:
                 ax.set_visible(False)
+                ax.tick_params(labelbottom=False)
             axinit = self.ind
             gsind = 0
             for j in np.arange(axinit, axinit+worknumtrace, 1):
@@ -87,6 +24,8 @@ class Index(object):
                 axs[j].set_visible(True)
                 axs[j].set_position(gs[gsind].get_position(fig))
                 gsind += 1
+
+            axs[j].tick_params(labelbottom=True)
             fig.canvas.draw()
 
     def nextFurtherKey(self, event):
@@ -96,6 +35,7 @@ class Index(object):
                 self.ind = self.ind - totalnumtrace
             for ax in axs:
                 ax.set_visible(False)
+                ax.tick_params(labelbottom=False)
             axinit = self.ind
             gsind = 0
             for j in np.arange(axinit, axinit+worknumtrace, 1):
@@ -104,6 +44,7 @@ class Index(object):
                 axs[j].set_visible(True)
                 axs[j].set_position(gs[gsind].get_position(fig))
                 gsind += 1
+            axs[j].tick_params(labelbottom=True)
             fig.canvas.draw()
 
     def prevKey(self, event):
@@ -113,6 +54,7 @@ class Index(object):
                 self.ind = totalnumtrace-1
             for ax in axs:
                 ax.set_visible(False)
+                ax.tick_params(labelbottom=False)
             axinit = self.ind
             gsind = 0
             for j in np.arange(axinit, axinit+worknumtrace, 1):
@@ -121,6 +63,7 @@ class Index(object):
                 axs[j].set_visible(True)
                 axs[j].set_position(gs[gsind].get_position(fig))
                 gsind += 1
+            axs[j].tick_params(labelbottom=True)
             fig.canvas.draw()
 
     def prevFurtherKey(self, event):
@@ -130,6 +73,7 @@ class Index(object):
                 self.ind = self.ind + totalnumtrace
             for ax in axs:
                 ax.set_visible(False)
+                ax.tick_params(labelbottom=False)
             axinit = self.ind
             gsind = 0
             for j in np.arange(axinit, axinit+worknumtrace, 1):
@@ -138,6 +82,7 @@ class Index(object):
                 axs[j].set_visible(True)
                 axs[j].set_position(gs[gsind].get_position(fig))
                 gsind += 1
+            axs[j].tick_params(labelbottom=True)
             fig.canvas.draw()
 
 def oncpick(event):
@@ -153,6 +98,9 @@ def oncpick(event):
             axind = fig.axes.index(ax)
             tmpx = ax.lines[0].get_xdata()
             amarkerlist[axind] = -tmpx[0] # arrival time relative to data starttime
+            fig.texts[-2].set_text('Last pick: '+str(stanamelist[axind])+' '+str('{:.2f}'.format(-tmpx[0]))+' s')
+            fig.texts[-2].set_color('C'+str(axind))
+
     elif event.inaxes and event.inaxes == axbutton:
         if event.button == 1: # Left click only
             ax = event.inaxes
@@ -234,76 +182,73 @@ def aziequi(ax, azilist, dellist):
     ax.set_yticks([])
     return sc
 
+def updateColorCycle(cmapkey):
+    cmap = plt.get_cmap(cmapkey, 8)
+    custom_color_cycle = [ str(mpl.colors.rgb2hex(cmap(i)[:3])) for i in range(cmap.N) ]
+    plt.rc('axes', prop_cycle=(cycler(color=custom_color_cycle)))
+
+def checkArgparse():
+    # Argument check
+    parser = argparse.ArgumentParser(description='pyP: Python based P-arrival picking tool',
+                                    usage='test.py [-h] displayNum sacfiles elat elon'+\
+                                    '\n\nExample:'+\
+                                    '\n>>> python pyP.py 7 "../__bak/pyPick/SACfiles/II*.SAC,../__bak/pyPick/SACfiles/II.*.SAC" 36.11 140.10\n ')
+    parser.add_argument('displayNum', help='Number of traces shown in display (e.g., 7)', type=int)
+    parser.add_argument('sacfiles', help='SAC files you want to pick P arrival (e.g., "./*.SAC"). comma-separated list is available. *Do not forget quotation marks!', type=str)
+    parser.add_argument('elat', help='Latitude of epicentre (for station azimuth)', type=float)
+    parser.add_argument('elon', help='Longitude of epicentre (for station azimuth)', type=float)
+    args = parser.parse_args()
+    return args
+
+def loadStream(args):
+    tmplist = [x.strip() for x in args.sacfiles.split(',')]
+    st = read(tmplist[0])
+    for sacfiles in tmplist[1:]:
+        st += read(sacfiles)
+    elat, elon = float(args.elat), float(args.elon) #38.392, 39.085
+    for j in range(len(st)):
+        trace = st[j].copy()
+        tmp = geod.Inverse(elat, elon, trace.stats.sac.stla, trace.stats.sac.stlo)
+        azi = tmp['azi1']
+        if azi < 0:
+            azi = 360 + azi
+        trace.stats.sac.user0 = azi
+        trace.stats.sac.user1 = tmp['a12']
+        st[j] = trace
+    st.traces.sort(key=lambda x: x.stats.sac.user0) # sort by azimuth
+    return st
+
 import sys
-import glob
 import argparse
-import mplcursors
+import glob
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from obspy import read
 import matplotlib as mpl
 from cycler import cycler
+updateColorCycle('Set2')
 from datetime import datetime
-import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from geographiclib.geodesic import Geodesic
-import matplotlib.patheffects as path_effects
-from matplotlib.widgets import Button, MultiCursor
-cmap = plt.get_cmap('Set3', 12)
-custom_color_cycle = [ str(mpl.colors.rgb2hex(cmap(i)[:3])) for i in range(cmap.N) ]
-plt.rc('axes', prop_cycle=(cycler(color=custom_color_cycle)))
 geod = Geodesic.WGS84
-textpe = [path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()]
-xmin0 = -100
-xmax0 = 400
+from matplotlib.widgets import Button, MultiCursor
+import matplotlib.patheffects as path_effects
 
-# Argument check
-parser = argparse.ArgumentParser(description='pyP: Python based P-arrival picking tool')
-parser.add_argument('arg1', help='Number of traces shown in display (e.g., 7)')
-parser.add_argument('arg2', help='SAC files you want to pick P arrival (e.g., "./*.SAC") *Do not forget quotation marks!')
-parser.add_argument('arg3', help='Latitude of epicentre')
-parser.add_argument('arg4', help='Longitude of epicentre')
-args = parser.parse_args()
-try:
-    worknumtrace = int(args.arg1)
-except ValueError:
-    worknumtrace = 7
-    sacfiles = args.arg1
-    print('')
-    print('  Caution: You did not input the number of traces shown at once.')
-    print('           --> I set 7 as the number of traces on display at once: `worknumtrace`.')
-    print('  Next time, input the number of traces you like as:')
-    print('  > python pyP.py 7 "./*.SAC"')
-    print('')
-sacfiles = args.arg2
-if len(glob.glob(sacfiles)) == 0:
-    print('')
-    print('  Error: No SAC files identified. Pleae specify the correct SAC files. Stopped.')
-    print('')
-    sys.exit(1)
+# Check parsed arguments, and load data
+args = checkArgparse()
+st = loadStream(args)
 
-# Load SAC files and sort traces based on station azimuth
-st = read(sacfiles)
-elat, elon = float(args.arg3), float(args.arg4) #38.392, 39.085
-for j in range(len(st)):
-    trace = st[j].copy()
-    tmp = geod.Inverse(elat, elon, trace.stats.sac.stla, trace.stats.sac.stlo)
-    azi = tmp['azi1']
-    if azi < 0:
-        azi = 360 + azi
-    trace.stats.sac.user0 = azi
-    trace.stats.sac.user1 = tmp['a12']
-    st[j] = trace
-st.traces.sort(key=lambda x: x.stats.sac.user0) # sort by azimuth
-
-# Base subplots, which is not shown
-totalnumtrace = len(glob.glob(sacfiles))
+# Base subplots (not shown in display)
+totalnumtrace = len(st)
 fig, axs = plt.subplots(totalnumtrace, figsize=(15, 10))
 fig.subplots_adjust(left=0.3)
+fig.canvas.set_window_title('pyP')
 
+textpe = [path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()]
+xmin0, xmax0 = -100, 400
 amarkerlist = np.zeros(totalnumtrace)
-stanamelist = []
-azilist, dellist = [], []
+stanamelist, azilist, dellist = [], [], []
 for j,ax in enumerate(axs.flat):
     trace = st[j].copy()
     amarker = trace.stats.sac.a
@@ -321,42 +266,21 @@ for j,ax in enumerate(axs.flat):
     ymin0 = -max( np.abs(y[ int((amarker+xmin0)*df):int((amarker+xmax0)*df) ]) ) * 1.2
     ymax0 = max( np.abs(y[ int((amarker+xmin0)*df):int((amarker+xmax0)*df) ]) ) * 1.2
     ax.set_ylim(ymin0, ymax0)
-    textlabel = str(j+1)+'/'+str(totalnumtrace)+'\n'+str(trace.stats.network)+'.'+str(trace.stats.station)+'.'+str(trace.stats.location)+'.'+str(trace.stats.channel)
+    textlabel0 = str(j+1)+'/'+str(totalnumtrace)+'\n'+str(trace.stats.network)+'.'+str(trace.stats.station)+'.'+str(trace.stats.location)+'.'+str(trace.stats.channel)
     textlabel1 = '\nAzi: '+str('{:.2f}'.format(trace.stats.sac.user0)) + '\nDel: ' + str('{:.2f}'.format(trace.stats.sac.user1))
-    text = ax.text(xmin0+(xmax0-xmin0)*0.005, ymax0-(ymax0-ymin0)*0.1, textlabel+textlabel1, fontsize=8, ha='left', va='top').set_path_effects(textpe)
+    text = ax.text(xmin0+(xmax0-xmin0)*0.005, ymax0-(ymax0-ymin0)*0.1, textlabel0+textlabel1, fontsize=8, ha='left', va='top').set_path_effects(textpe)
 
     ax.patch.set_facecolor('C'+str(j))
-    ax.patch.set_alpha(0.2)
+    ax.patch.set_alpha(0.1)
     ax.tick_params(labelleft=False)
     ax.tick_params(labelbottom=False)
 
-
-# Display canvus / Interactive click actions
-gs = GridSpec(worknumtrace,1, hspace=0)
+# Display interactive canvus, define click actions
+worknumtrace = args.displayNum
+gs = GridSpec(worknumtrace,1,hspace=0)
 callback = Index()
-
-axp = axs[-1].get_position()
-tmpw = axp.width*0.08
-axprevFurther = plt.axes([axp.x0, axp.y0-0.05, tmpw, 0.035])
-axprev = plt.axes([axp.x0+tmpw+0.02, axp.y0-0.05, tmpw, 0.035])
-axnext = plt.axes([axp.x0+tmpw*2+0.02*2, axp.y0-0.05, tmpw, 0.035])
-axnextFurther = plt.axes([axp.x0+tmpw*3+0.02*3, axp.y0-0.05, tmpw, 0.035])
-
-bprevFurther = Button(axprevFurther, '<<')
-bprevFurther.on_clicked(callback.prevFurther)
-
-bprev = Button(axprev, '<')
-bprev.on_clicked(callback.prev)
-
-bnext = Button(axnext, '>')
-bnext.on_clicked(callback.next)
-
-bnextFurther = Button(axnextFurther, '>>')
-bnextFurther.on_clicked(callback.nextFurther)
-
 kpnext = fig.canvas.mpl_connect('key_press_event', callback.nextKey)
 kpnextFurther = fig.canvas.mpl_connect('key_press_event', callback.nextFurtherKey)
-
 kpprev = fig.canvas.mpl_connect('key_press_event', callback.prevKey)
 kpprevFurther = fig.canvas.mpl_connect('key_press_event', callback.prevFurtherKey)
 
@@ -371,11 +295,12 @@ for ax in axs:
 for j in np.arange(0, worknumtrace, 1):
     axs[j].set_visible(True)
     axs[j].set_position(gs[j].get_position(fig))
+axs[j].tick_params(labelbottom=True)
 
-# Show usage at top
+# Usage at top
 axp = axs[0].get_position()
 usagetext = 'Usage: press key\n[A] Zoom-in xlim      [Z] Zoom-out xlim      [X] Reset xlim\n[.] Zoom-in ylim        [,] Zoom-out ylim\n'+\
-r'[$\downarrow$] Next      [$\rightarrow$] Next more      [$\uparrow$] Prev      [$\leftarrow$] Prev more'
+r'[$\leftarrow$] Prev more      [$\uparrow$] Prev      [$\downarrow$] Next      [$\rightarrow$] Next more'
 fig.text(axp.x0, axp.y1+0.01, usagetext, size=8)
 
 # Station map
@@ -384,12 +309,12 @@ axstamap = fig.add_axes([axp.x0-0.255, axp.y0, 0.25, 0.25])
 axstamap.set_aspect(1)
 sc = aziequi(axstamap, azilist, dellist)
 
-# Save function (save amarker list in log.csv)
-axbutton = fig.add_axes([axp.x1-0.1, axp.y0-0.05, 0.1, 0.035])
-axp = axbutton.get_position()
-fig.text(axp.x0-0.01, axp.y0+axp.height/2, '', ha='right', va='center')
+# Save function (save amarker list in log.csv) and some information
+axbutton = fig.add_axes([axp.x1-0.1, axp.y0-0.075, 0.1, 0.035])
+axpb = axbutton.get_position()
+fig.text(axp.x0+(axp.width/2), axpb.y0+axpb.height/2, 'Time (s)', ha='center', va='center')
+fig.text(axp.x0, axpb.y0+axpb.height/2, 'Last pick: None', ha='left', va='center')
+fig.text(axpb.x0-0.01, axpb.y0+axpb.height/2, '', ha='right', va='center')
 bsave = Button(axbutton, 'Save')
-
-fig.canvas.set_window_title('pyP')
 
 plt.show()
