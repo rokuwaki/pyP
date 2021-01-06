@@ -374,7 +374,7 @@ for j in np.arange(0, worknumtrace, 1):
 
 # Show usage at top
 axp = axs[0].get_position()
-usagetext = 'Usage: press key\n[A] Zoom-in xlim      [Z] Zoom-out xlim      [X] Rest xlim\n[.] Zoom-in ylim        [,] Zoom-out ylim\n'+\
+usagetext = 'Usage: press key\n[A] Zoom-in xlim      [Z] Zoom-out xlim      [X] Reset xlim\n[.] Zoom-in ylim        [,] Zoom-out ylim\n'+\
 r'[$\downarrow$] Next      [$\rightarrow$] Next more      [$\uparrow$] Prev      [$\leftarrow$] Prev more'
 fig.text(axp.x0, axp.y1+0.01, usagetext, size=8)
 
