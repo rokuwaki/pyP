@@ -383,4 +383,6 @@ axp = axbutton.get_position()
 fig.text(axp.x0-0.01, axp.y0+axp.height/2, '', ha='right', va='center')
 bsave = Button(axbutton, 'Save')
 
+fig.canvas.set_window_title('pyP')
+
 plt.show()
