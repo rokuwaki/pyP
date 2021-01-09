@@ -104,12 +104,31 @@ def oncpick(event):
     elif event.inaxes and event.inaxes == axbutton:
         if event.button == 1: # Left click only
             ax = event.inaxes
-            tmp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            fig.texts[-1].set_text('Saved! '+tmp)
+            tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            fig.texts[-1].set_text('Saved! '+tmptime)
 
-            columns = ['amarker', 'Station']
-            df = pd.DataFrame(np.array([amarkerlist, stanamelist]).T, columns = columns)
-            df.to_csv('log.csv')
+            #columns = ['amarker', 'Station']
+            #df = pd.DataFrame(np.array([amarkerlist, stanamelist]).T, columns = columns)
+            #df.to_csv('log.csv')
+
+            tmp = glob.glob(args.sacfiles)[0].split('/')[:-1]
+            dirname = '/'.join(tmp)
+            if len(dirname) == 0:
+                dirname = '.'
+            tmplist = np.zeros(len(st))
+            for j in range(len(st)):
+                trace = st[j].copy()
+                tmplist[j] = trace.stats.sac.a
+                if trace.stats.sac.a != amarkerlist[j]:
+                    filename = trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+\
+                               '.M.'+str(trace.stats.sac.nzyear)+'.'+str(trace.stats.sac.nzjday).zfill(3)+\
+                               '.'+str(trace.stats.sac.nzhour)+str(trace.stats.sac.nzmin).zfill(2)+str(trace.stats.sac.nzsec).zfill(2)+'.SAC'
+                    print('['+tmptime+'] Save log: Picked time is revised:', '{:.3f}'.format(trace.stats.sac.a), '-->', '{:.3f}'.format(amarkerlist[j]), '|', filename)
+                    trace.stats.sac.a = amarkerlist[j]
+                    trace.write(dirname+'/'+filename, format='SAC')
+                    st[j] = trace
+            #if (tmplist == amarkerlist).all():
+            #    print('['+tmptime+'] Save log: Nothing has been changed since the last pick.')
 
     fig.canvas.draw()
 
@@ -214,10 +233,31 @@ def loadStream(args):
             azi = 360 + azi
         trace.stats.sac.user0 = azi
         trace.stats.sac.user1 = tmp['a12']
+        try:
+            tmpa = trace.stats.sac.a
+        except AttributeError:
+            trace.stats.sac.a = 300.0
         st[j] = trace
     st.traces.sort(key=lambda x: x.stats.sac.user0) # sort by azimuth
     return st
 
+def outputlog(st, args):
+    tmp = glob.glob(args.sacfiles)[0].split('/')[:-1]
+    dirname = '/'.join(tmp)
+    if len(dirname) == 0:
+        dirname = '.'
+    for j in range(len(st)):
+        trace = st[j].copy()
+        filename = trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+\
+                   '.M.'+str(trace.stats.sac.nzyear)+'.'+str(trace.stats.sac.nzjday).zfill(3)+\
+                   '.'+str(trace.stats.sac.nzhour)+str(trace.stats.sac.nzmin).zfill(2)+str(trace.stats.sac.nzsec).zfill(2)+'.SAC'
+        tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print('['+tmptime+']', '{:.3f}'.format(trace.stats.sac.a), '|', dirname+'/'+filename)
+
+
+
+
+import os
 import sys
 import argparse
 import glob
@@ -235,6 +275,9 @@ geod = Geodesic.WGS84
 from matplotlib.widgets import Button, MultiCursor
 import matplotlib.patheffects as path_effects
 
+sys.stdout = open('pyP.log', 'a')
+print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP started '+os.getcwd())
+
 # Check parsed arguments, and load data
 args = checkArgparse()
 st = loadStream(args)
@@ -246,7 +289,7 @@ fig.subplots_adjust(left=0.3)
 fig.canvas.set_window_title('pyP')
 
 textpe = [path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()]
-xmin0, xmax0 = -100, 400
+xmin0, xmax0 = -100, 400 # default xlim
 amarkerlist = np.zeros(totalnumtrace)
 stanamelist, azilist, dellist = [], [], []
 for j,ax in enumerate(axs.flat):
@@ -318,3 +361,5 @@ fig.text(axpb.x0-0.01, axpb.y0+axpb.height/2, '', ha='right', va='center')
 bsave = Button(axbutton, 'Save')
 
 plt.show()
+outputlog(st, args)
+print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP ended')
