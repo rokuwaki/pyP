@@ -209,7 +209,7 @@ def updateColorCycle(cmapkey):
 def checkArgparse():
     # Argument check
     parser = argparse.ArgumentParser(description='pyP: Python based P-arrival picking tool',
-                                    usage='test.py [-h] displayNum sacfiles elat elon'+\
+                                    usage='pyP.py [-h] displayNum sacfiles elat elon'+\
                                     '\n\nExample:'+\
                                     '\n>>> python pyP.py 7 "../II*.SAC, ../IU.*.SAC" 36.11 140.10\n ')
     parser.add_argument('displayNum', help='Number of traces shown in display (e.g., 7)', type=int)
