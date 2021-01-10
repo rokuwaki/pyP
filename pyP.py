@@ -120,13 +120,23 @@ def oncpick(event):
                 trace = st[j].copy()
                 tmplist[j] = trace.stats.sac.a
                 if trace.stats.sac.a != amarkerlist[j]:
-                    filename = trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+\
-                               '.M.'+str(trace.stats.sac.nzyear)+'.'+str(trace.stats.sac.nzjday).zfill(3)+\
-                               '.'+str(trace.stats.sac.nzhour)+str(trace.stats.sac.nzmin).zfill(2)+str(trace.stats.sac.nzsec).zfill(2)+'.SAC'
-                    print('['+tmptime+'] Save log: Picked time is revised:', '{:.3f}'.format(trace.stats.sac.a), '-->', '{:.3f}'.format(amarkerlist[j]), '|', filename)
+                    filename = glob.glob(dirname+'/'+trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+'*.SAC')
+                    if len(filename) > 1:
+                        tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        print('['+tmptime+'] Error!', trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel,
+                               'is duplicated. Stopped.')
+                        print('['+tmptime+'] Error!', trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel,
+                               'is duplicated. Stopped.', file=logfile)
+                        print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP ended, unexpectedly. See above error.', file=logfile)
+                        logfile.close()
+                        exit(1)
+
+                    abspath = os.path.abspath(filename[0])
+                    print('['+tmptime+'] Saved:', '{:.3f}'.format(trace.stats.sac.a), '-->', '{:.3f}'.format(amarkerlist[j]), '|', abspath, file=logfile)
+                    print('['+tmptime+'] Saved:', '{:.3f}'.format(trace.stats.sac.a), '-->', '{:.3f}'.format(amarkerlist[j]), '|', abspath)
                     trace.stats.sac.a = amarkerlist[j]
-                    trace.write(dirname+'/'+filename, format='SAC')
                     st[j] = trace
+                    trace.write(abspath, format='SAC')
             #if (tmplist == amarkerlist).all():
             #    print('['+tmptime+'] Save log: Nothing has been changed since the last pick.')
 
@@ -242,17 +252,11 @@ def loadStream(args):
     return st
 
 def outputlog(st, args):
-    tmp = glob.glob(args.sacfiles)[0].split('/')[:-1]
-    dirname = '/'.join(tmp)
-    if len(dirname) == 0:
-        dirname = '.'
     for j in range(len(st)):
         trace = st[j].copy()
-        filename = trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+\
-                   '.M.'+str(trace.stats.sac.nzyear)+'.'+str(trace.stats.sac.nzjday).zfill(3)+\
-                   '.'+str(trace.stats.sac.nzhour)+str(trace.stats.sac.nzmin).zfill(2)+str(trace.stats.sac.nzsec).zfill(2)+'.SAC'
+        filename = trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel
         tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print('['+tmptime+']', '{:.3f}'.format(trace.stats.sac.a), '|', dirname+'/'+filename)
+        print('['+tmptime+']', str(j+1).rjust(3)+'/'+str(totalnumtrace), '|', '{:.3f}'.format(trace.stats.sac.a), '|', filename, file=logfile)
 
 
 
@@ -277,8 +281,8 @@ import matplotlib.patheffects as path_effects
 
 # Check parsed arguments, and load data
 args = checkArgparse()
-sys.stdout = open('pyP.log', 'a')
-print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP started '+os.getcwd())
+logfile = open('pyP.log', 'a')
+print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP started '+os.getcwd(), file=logfile)
 st = loadStream(args)
 
 # Base subplots (not shown in display)
@@ -361,4 +365,6 @@ bsave = Button(axbutton, 'Save')
 
 plt.show()
 outputlog(st, args)
-print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP ended')
+print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP ended', file=logfile)
+print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] =========', file=logfile)
+logfile.close()

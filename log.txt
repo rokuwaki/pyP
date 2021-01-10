@@ -1,0 +1,2 @@
+print on log.txt
+print on log.txt
