@@ -275,11 +275,10 @@ geod = Geodesic.WGS84
 from matplotlib.widgets import Button, MultiCursor
 import matplotlib.patheffects as path_effects
 
-sys.stdout = open('pyP.log', 'a')
-print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP started '+os.getcwd())
-
 # Check parsed arguments, and load data
 args = checkArgparse()
+sys.stdout = open('pyP.log', 'a')
+print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP started '+os.getcwd())
 st = loadStream(args)
 
 # Base subplots (not shown in display)
