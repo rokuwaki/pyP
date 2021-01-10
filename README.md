@@ -5,16 +5,16 @@
 ### On terminal
 - Execute `pyP.py`
 ```zsh
-python pyP.py 7 "work/2020-01-24-mww67-turkey/*.SAC" 38.392 39.085
+python pyP.py 7 "work/*.SAC" 38.392 39.085
 ```
 
-- positional arguments:
-  - `displayNum`: Number of traces shown in display (e.g., 7)
-  - `sacfiles`: SAC files you want to pick P arrival (e.g., "./*.SAC"). comma-separated list is available. *Do not forget quotation marks!
+- Positional arguments:
+  - `displayNum`: Number of traces shown at once in display (e.g., 7)
+  - `sacfiles`: SAC files you want to pick P arrival (e.g., "./*.SAC"). Comma-separated list is available. *Do not forget quotation marks!*
   - `elat`: Latitude of epicentre (for station azimuth)
   - `elon`: Longitude of epicentre (for station azimuth)
 
-- optional arguments:
+- Optional arguments:
   - `-h`, `--help`: show this help message and exit
 
 
@@ -28,9 +28,9 @@ python pyP.py 7 "work/2020-01-24-mww67-turkey/*.SAC" 38.392 39.085
   - `.`: Zoom in ylim
   - `,`: Zoom out ylim
   - `↓`: Display next trace
-  - `→`: Display further next traces
+  - `→`: Display next page
   - `↑`: Display previous trace
-  - `←`: Display further previous traces
+  - `←`: Display previous page
 
 - Click `Save` button to save picked time and overwrite `a` marker in SAC header
 
