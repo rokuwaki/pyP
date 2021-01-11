@@ -31,4 +31,4 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 
 - Click `Save` button to save picked time and overwrite `a` marker in SAC header
 
-![](./image/screen.png)
+![](./image/screen.gif)
