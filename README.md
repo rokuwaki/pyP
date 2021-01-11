@@ -2,8 +2,7 @@
 `pyP` is a Python GUI tool to pick arrival time of *P* phase
 
 ## Usage
-### On terminal
-- Execute `pyP.py`
+- Execute `pyP.py` on termial
 ```zsh
 python pyP.py 7 "work/*.SAC" 38.392 39.085
 ```
@@ -17,10 +16,6 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 - Optional arguments:
   - `-h`, `--help`: show this help message and exit
 
-
-### On GUI
-- Click to pick arrival time
-
 - Control panel by pressing keys:
   - `a`: Zoom in xlim
   - `z`: Zoom out xlim
@@ -31,6 +26,8 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
   - `→`: Display next page
   - `↑`: Display previous trace
   - `←`: Display previous page
+
+- Click to pick arrival time
 
 - Click `Save` button to save picked time and overwrite `a` marker in SAC header
 
