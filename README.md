@@ -32,3 +32,13 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 - Click to pick arrival time
 
 - Click `Save` button to save picked time and overwrite `a` marker in SAC header
+
+### Dependencies
+
+- [Matplotlib](https://matplotlib.org/)
+- [ObsPy](https://docs.obspy.org/)
+- [geographiclib](https://pypi.org/project/geographiclib/)
+- ... and their dependencies
+
+### Note
+`pyP` is inspired from `tp` tool developed by Amato Kasahara.
