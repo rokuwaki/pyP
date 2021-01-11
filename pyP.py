@@ -107,10 +107,6 @@ def oncpick(event):
             tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             fig.texts[-1].set_text('Saved! '+tmptime)
 
-            #columns = ['amarker', 'Station']
-            #df = pd.DataFrame(np.array([amarkerlist, stanamelist]).T, columns = columns)
-            #df.to_csv('log.csv')
-
             tmp = glob.glob(args.sacfiles)[0].split('/')[:-1]
             dirname = '/'.join(tmp)
             if len(dirname) == 0:
@@ -123,10 +119,8 @@ def oncpick(event):
                     filename = glob.glob(dirname+'/'+trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+'*.SAC')
                     if len(filename) > 1:
                         tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        print('['+tmptime+'] Error!', trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel,
-                               'is duplicated. Stopped.')
-                        print('['+tmptime+'] Error!', trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel,
-                               'is duplicated. Stopped.', file=logfile)
+                        print('['+tmptime+'] Error!', trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel, 'is duplicated. Stopped.')
+                        print('['+tmptime+'] Error!', trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel, 'is duplicated. Stopped.', file=logfile)
                         print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP ended, unexpectedly. See above error.', file=logfile)
                         logfile.close()
                         exit(1)
@@ -137,15 +131,15 @@ def oncpick(event):
                     trace.stats.sac.a = amarkerlist[j]
                     st[j] = trace
                     trace.write(abspath, format='SAC')
-            #if (tmplist == amarkerlist).all():
-            #    print('['+tmptime+'] Save log: Nothing has been changed since the last pick.')
+            if (tmplist == amarkerlist).all():
+                print('['+tmptime+'] You saved, but nothing has been changed.')
 
     fig.canvas.draw()
 
 def keypress(event):
     '''
-    press ",": zoom in ylim
-    press ".": zoom out ylim
+    press ".": zoom in ylim
+    press ",": zoom out ylim
     press "a": zoom in xlim
     press "z": zoom out xlim
     press "x": Reset xlim
@@ -221,12 +215,13 @@ def checkArgparse():
     parser = argparse.ArgumentParser(description='pyP: Python based P-arrival picking tool',
                                     usage='pyP.py [-h] displayNum sacfiles elat elon'+\
                                     '\n\nExample:'+\
-                                    '\n>>> python pyP.py 7 "../II*.SAC, ../IU.*.SAC" 36.11 140.10\n ')
+                                    '\n>>> python pyP.py 7 "../II*.SAC, ../IU.*.SAC" 36.11 140.10')
     parser.add_argument('displayNum', help='Number of traces shown in display (e.g., 7)', type=int)
     parser.add_argument('sacfiles', help='SAC files you want to pick P arrival (e.g., "./*.SAC"). comma-separated list is available. *Do not forget quotation marks!', type=str)
     parser.add_argument('elat', help='Latitude of epicentre (for station azimuth)', type=float)
     parser.add_argument('elon', help='Longitude of epicentre (for station azimuth)', type=float)
     args = parser.parse_args()
+
     return args
 
 def loadStream(args):
@@ -256,7 +251,7 @@ def outputlog(st, args):
         trace = st[j].copy()
         filename = trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel
         tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print('['+tmptime+']', str(j+1).rjust(3)+'/'+str(totalnumtrace), '|', '{:.3f}'.format(trace.stats.sac.a), '|', filename, file=logfile)
+        print('['+tmptime+']', str(j+1).rjust(4)+'/'+str(totalnumtrace), '|', '{:.3f}'.format(trace.stats.sac.a), '|', filename, file=logfile)
 
 
 
@@ -279,19 +274,22 @@ geod = Geodesic.WGS84
 from matplotlib.widgets import Button, MultiCursor
 import matplotlib.patheffects as path_effects
 
-# Check parsed arguments, and load data
-args = checkArgparse()
 logfile = open('pyP.log', 'a')
 print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP started '+os.getcwd(), file=logfile)
+
+# Check parsed arguments, and load data
+args = checkArgparse()
 st = loadStream(args)
 
 # Base subplots (not shown in display)
 totalnumtrace = len(st)
-fig, axs = plt.subplots(totalnumtrace, figsize=(15, 10))
+worknumtrace = args.displayNum
+if worknumtrace > totalnumtrace: worknumtrace = totalnumtrace
+
+fig, axs = plt.subplots(totalnumtrace, figsize=(15, 10.6))
 fig.subplots_adjust(left=0.3)
 fig.canvas.set_window_title('pyP')
 
-textpe = [path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()]
 xmin0, xmax0 = -100, 400 # default xlim
 amarkerlist = np.zeros(totalnumtrace)
 stanamelist, azilist, dellist = [], [], []
@@ -314,6 +312,7 @@ for j,ax in enumerate(axs.flat):
     ax.set_ylim(ymin0, ymax0)
     textlabel0 = str(j+1)+'/'+str(totalnumtrace)+'\n'+str(trace.stats.network)+'.'+str(trace.stats.station)+'.'+str(trace.stats.location)+'.'+str(trace.stats.channel)
     textlabel1 = '\nAzi: '+str('{:.2f}'.format(trace.stats.sac.user0)) + '\nDel: ' + str('{:.2f}'.format(trace.stats.sac.user1))
+    textpe = [path_effects.Stroke(linewidth=2, foreground='w', alpha=1), path_effects.Normal()]
     text = ax.text(xmin0+(xmax0-xmin0)*0.005, ymax0-(ymax0-ymin0)*0.1, textlabel0+textlabel1, fontsize=8, ha='left', va='top').set_path_effects(textpe)
 
     ax.patch.set_facecolor('C'+str(j))
@@ -322,7 +321,6 @@ for j,ax in enumerate(axs.flat):
     ax.tick_params(labelbottom=False)
 
 # Display interactive canvus, define click actions
-worknumtrace = args.displayNum
 gs = GridSpec(worknumtrace,1,hspace=0)
 callback = Index()
 kpnext = fig.canvas.mpl_connect('key_press_event', callback.nextKey)
