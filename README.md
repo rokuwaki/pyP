@@ -1,6 +1,8 @@
 # pyP
 `pyP` is a Python GUI tool to pick arrival time of *P* phase
 
+![](./image/screen.gif)
+
 ## Usage
 - Execute `pyP.py` on termial
 ```zsh
@@ -30,5 +32,3 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 - Click to pick arrival time
 
 - Click `Save` button to save picked time and overwrite `a` marker in SAC header
-
-![](./image/screen.gif)
