@@ -8,6 +8,7 @@ class Index(object):
     Switch panel for the waveform traces by clcking the buttons
     '''
     ind = 0
+    discardList = []
     def nextKey(self, event):
         if event.key == 'down':
             self.ind += 1
@@ -85,6 +86,21 @@ class Index(object):
             axs[j].tick_params(labelbottom=True)
             fig.canvas.draw()
 
+    def discardStation(self, event):
+        if event.key == 'd':
+            if event.inaxes and event.inaxes in axs:
+                ax = event.inaxes
+                axind = fig.axes.index(ax)
+                ax.texts[0].set_color('gray')
+                discardList[axind] = 1
+        if event.key == 'b':
+            if event.inaxes and event.inaxes in axs:
+                ax = event.inaxes
+                axind = fig.axes.index(ax)
+                ax.texts[0].set_color('k')
+                discardList[axind] = 0
+
+
 def oncpick(event):
     '''
     Left click: Pick arrival time
@@ -143,6 +159,8 @@ def keypress(event):
     press "a": zoom in xlim
     press "z": zoom out xlim
     press "x": Reset xlim
+    press "d": discard station from list
+    press "b": keep station
     '''
     for ax in axs:
         x = ax.lines[0].get_xdata()
@@ -253,8 +271,20 @@ def outputlog(st, args):
         tmptime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print('['+tmptime+']', str(j+1).rjust(4)+'/'+str(totalnumtrace), '|', '{:.3f}'.format(trace.stats.sac.a), '|', filename, file=logfile)
 
-
-
+def discard(st, args, discardList):
+    tmp = glob.glob(args.sacfiles)[0].split('/')[:-1]
+    dirname = '/'.join(tmp)
+    if len(dirname) == 0:
+        dirname = '.'
+    data = np.loadtxt(dirname+'/wave_file.dat', dtype=str)
+    for j in range(len(st)):
+        trace = st[j].copy()
+        filename = glob.glob(dirname+'/'+trace.stats.network+'.'+trace.stats.station+'.'+trace.stats.location+'.'+trace.stats.channel+'*.SAC')
+        abspath = os.path.abspath(filename[0])
+        tmplist = abspath.split('/')[-1]
+        for i in range(len(data)):
+            if (tmplist in data[i][0]) == True and discardList[j] == 0:
+                print(data[i][0].ljust(int(max(len(data[i][0]), 40))), data[i][1])
 
 import os
 import sys
@@ -262,7 +292,6 @@ import argparse
 import glob
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from obspy import read
 import matplotlib as mpl
 from cycler import cycler
@@ -271,7 +300,7 @@ from datetime import datetime
 from matplotlib.gridspec import GridSpec
 from geographiclib.geodesic import Geodesic
 geod = Geodesic.WGS84
-from matplotlib.widgets import Button, MultiCursor
+from matplotlib.widgets import Button, MultiCursor, TextBox
 import matplotlib.patheffects as path_effects
 
 logfile = open('pyP.log', 'a')
@@ -291,7 +320,7 @@ fig.subplots_adjust(left=0.3)
 fig.canvas.set_window_title('pyP')
 
 xmin0, xmax0 = -100, 400 # default xlim
-amarkerlist = np.zeros(totalnumtrace)
+amarkerlist, discardList = np.zeros(totalnumtrace), np.zeros(totalnumtrace)
 stanamelist, azilist, dellist = [], [], []
 for j,ax in enumerate(axs.flat):
     trace = st[j].copy()
@@ -327,6 +356,7 @@ kpnext = fig.canvas.mpl_connect('key_press_event', callback.nextKey)
 kpnextFurther = fig.canvas.mpl_connect('key_press_event', callback.nextFurtherKey)
 kpprev = fig.canvas.mpl_connect('key_press_event', callback.prevKey)
 kpprevFurther = fig.canvas.mpl_connect('key_press_event', callback.prevFurtherKey)
+discardStation = fig.canvas.mpl_connect('key_press_event', callback.discardStation)
 
 curser = MultiCursor(fig.canvas, axs, color='#B12763', lw=1, alpha=0.75)
 fig.canvas.mpl_connect('button_press_event', oncpick)
@@ -362,6 +392,8 @@ fig.text(axpb.x0-0.01, axpb.y0+axpb.height/2, '', ha='right', va='center')
 bsave = Button(axbutton, 'Save')
 
 plt.show()
+
+#discard(st, args, discardList)
 outputlog(st, args)
 print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] pyP ended', file=logfile)
 print('['+str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'] =========', file=logfile)
