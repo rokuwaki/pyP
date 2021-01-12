@@ -11,8 +11,8 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 
 - Positional arguments:
   - `displayNum`: number of traces shown at once in display (e.g., 7)
-  - `sacfiles`: SAC files you want to pick (e.g., "./*.SAC").
-    - comma-separated list is available.
+  - `sacfiles`: SAC files you want to pick (e.g., "./*.SAC")
+    - comma-separated list is available (e.g., "./II*.SAC, ./IU.SAC")
     - *Do not forget quotation marks!*
   - `elat`: latitude of epicentre (degree)
   - `elon`: longitude of epicentre (degree)
@@ -34,7 +34,7 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 
 - Click trace to pick arrival time
 
-- Click `Save` button to save picked time and (over)write `a` marker in SAC header
+- Click `Save` button to store arrival time as `a` marker in SAC header
 
 ## Dependencies
 
@@ -44,4 +44,4 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 - ... and their dependencies
 
 ## Note
-`pyP` is inspired from `tp` developed by Amato Kasahara.
+`pyP` is inspired from `tp` developed by Amato Kasahara
