@@ -1,5 +1,5 @@
 # pyP
-`pyP` is a Python GUI tool to pick arrival time of *P* phase
+`pyP` is a Python GUI to pick arrival time of seismic phase
 
 ![](./image/screen.gif)
 
@@ -10,35 +10,38 @@ python pyP.py 7 "work/*.SAC" 38.392 39.085
 ```
 
 - Positional arguments:
-  - `displayNum`: Number of traces shown at once in display (e.g., 7)
-  - `sacfiles`: SAC files you want to pick P arrival (e.g., "./*.SAC"). Comma-separated list is available. *Do not forget quotation marks!*
-  - `elat`: Latitude of epicentre (for station azimuth)
-  - `elon`: Longitude of epicentre (for station azimuth)
+  - `displayNum`: number of traces shown at once in display (e.g., 7)
+  - `sacfiles`: SAC files you want to pick (e.g., "./*.SAC").
+    - comma-separated list is available.
+    - *Do not forget quotation marks!*
+  - `elat`: latitude of epicentre (degree)
+  - `elon`: longitude of epicentre (degree)
+    - epicentre is used for calculating station azimuth and distance
 
 - Optional arguments:
   - `-h`, `--help`: show this help message and exit
 
 - Control panel by pressing keys:
-  - `a`: Zoom in xlim
-  - `z`: Zoom out xlim
-  - `x`: Reset xlim
-  - `.`: Zoom in ylim
-  - `,`: Zoom out ylim
-  - `↓`: Display next trace
-  - `→`: Display next page
-  - `↑`: Display previous trace
-  - `←`: Display previous page
+  - `a`: zoom in xlim
+  - `z`: zoom out xlim
+  - `x`: reset xlim
+  - `.`: zoom in ylim
+  - `,`: zoom out ylim
+  - `↓`: frame advance
+  - `↑`: frame back
+  - `→`: page advance
+  - `←`: page back
 
 - Click trace to pick arrival time
 
-- Click `Save` button to save picked time and overwrite `a` marker in SAC header
+- Click `Save` button to save picked time and (over)write `a` marker in SAC header
 
 ## Dependencies
 
-- [Matplotlib](https://matplotlib.org/)
+- [matplotlib](https://matplotlib.org/)
 - [ObsPy](https://docs.obspy.org/)
 - [geographiclib](https://pypi.org/project/geographiclib/)
 - ... and their dependencies
 
-#### Note
-`pyP` is inspired from `tp` tool developed by Amato Kasahara.
+## Note
+`pyP` is inspired from `tp` developed by Amato Kasahara.
